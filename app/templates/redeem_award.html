@@ -1,0 +1,36 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Redeem Award{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2" style="max-width: 760px">
+  <header class="mb-4">
+    <p class="text-uppercase text-muted small mb-1">Award redemption</p>
+    <h1 class="h3 mb-0">Redeem Award</h1>
+  </header>
+
+  <section class="card shadow-sm border-0" aria-label="Award redemption details">
+    <div class="card-body p-4">
+      <h2 class="h4 mb-4">{{ award.name }} Award</h2>
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Required Tier</dt>
+        <dd class="col-sm-8">{{ award.milestone_name }}</dd>
+        <dt class="col-sm-4">Required Hours</dt>
+        <dd class="col-sm-8">{{ award.required_hours }} approved hours</dd>
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8"><span class="badge text-bg-success">Unlocked</span></dd>
+        <dt class="col-sm-4">Description</dt>
+        <dd class="col-sm-8">{{ award.description }}</dd>
+      </dl>
+
+      <p class="small text-muted mt-4 mb-0">*Reward can only be redeemed once.</p>
+
+      <div class="d-flex justify-content-between gap-3 mt-4 pt-3 border-top">
+        <a class="btn btn-outline-secondary" href="{{ url_for('user_awards_view') }}">Cancel</a>
+        <form method="post" action="{{ url_for('redeem_award', award_id=award.id) }}">
+          <button class="btn btn-primary" type="submit">Redeem</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

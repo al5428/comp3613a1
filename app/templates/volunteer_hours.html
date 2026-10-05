@@ -1,0 +1,84 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Volunteer Hours{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2">
+  <header class="mb-4">
+    <p class="text-uppercase text-muted small mb-1">{{ "Administrator" if user.role == "admin" else "Student" }}</p>
+    <h1 class="h3 mb-0">Volunteer Hours</h1>
+  </header>
+
+  {% if user.role == "admin" %}
+    {% if submissions %}
+    <div class="table-responsive bg-white rounded-3 shadow-sm">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Student</th><th>Activity</th><th>Hours</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for submission, student_name in submissions %}
+          <tr>
+            <td>{{ student_name or "Unknown student" }}</td>
+            <td>{{ submission.activity_name }}</td>
+            <td>{{ submission.hours_worked }}</td>
+            <td>
+              {{ submission.status|capitalize }}:
+              <a href="{{ url_for('admin_submission_detail_view', submission_id=submission.id) }}">{{ "Review" if submission.status == "pending" else "View" }}</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No submissions are waiting for review.</p>
+    {% endif %}
+  {% else %}
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-4">
+      <section class="card shadow-sm border-0">
+        <div class="card-body">
+          <h2 class="h5 mb-3">My Hours</h2>
+          <div class="metric-grid">
+            <div><div class="metric-label">Approved</div><div class="metric-value">{{ summary.total_approved }}h</div></div>
+            <div><div class="metric-label">Pending</div><div class="metric-value">{{ summary.pending_count }}</div></div>
+            <div><div class="metric-label">Submissions</div><div class="metric-value">{{ summary.submission_count }}</div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="col-lg-8">
+      <section class="card shadow-sm border-0">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Submit volunteer activity</h2>
+          <form method="post" action="{{ url_for('create_volunteer_submission') }}">
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="activity_name">Activity name</label><input class="form-control" id="activity_name" name="activity_name" required></div>
+              <div class="col-md-6"><label class="form-label" for="hours_worked">Hours worked</label><input class="form-control" type="number" id="hours_worked" name="hours_worked" min="1" required></div>
+              <div class="col-md-6"><label class="form-label" for="activity_date">Activity date</label><input class="form-control" type="date" id="activity_date" name="activity_date" required></div>
+              <div class="col-12"><label class="form-label" for="description">Description</label><textarea class="form-control" id="description" name="description" rows="3"></textarea></div>
+              <div class="col-12"><label class="form-label" for="evidence">Evidence link</label><input class="form-control" type="url" id="evidence" name="evidence" placeholder="https://..."></div>
+            </div>
+            <div class="d-flex justify-content-end mt-3"><button class="btn btn-primary" type="submit">Submit for review</button></div>
+          </form>
+        </div>
+      </section>
+      <section class="mt-4">
+        <h2 class="h5 mb-3">Submission history</h2>
+        {% if submissions %}
+        <div class="list-group">
+          {% for submission in submissions %}
+          <article class="list-group-item py-3">
+            <div class="d-flex justify-content-between gap-3">
+              <div><strong>{{ submission.activity_name }}</strong><div class="small text-muted">Submitted {{ submission.submission_date.strftime('%b %d, %Y') }}</div>{% if submission.description %}<p class="mb-1 mt-2">{{ submission.description }}</p>{% endif %}</div>
+              <div class="text-end text-nowrap">{{ submission.hours_worked }}h<br><span class="badge rounded-pill status-badge status-{{ submission.status }}">{{ submission.status }}</span></div>
+            </div>
+            {% if submission.evidence %}<a class="small" href="{{ submission.evidence }}" target="_blank" rel="noreferrer">View evidence</a>{% endif %}
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}<p class="text-muted">No volunteer activities submitted yet.</p>{% endif %}
+      </section>
+    </div>
+  </div>
+  {% endif %}
+</main>
+{% endblock %}

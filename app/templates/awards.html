@@ -1,0 +1,47 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Awards{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2">
+  <header class="mb-4">
+    <p class="text-uppercase text-muted small mb-1">{{ "Administrator" if user.role == "admin" else "Student" }}</p>
+    <h1 class="h3 mb-0">Awards</h1>
+  </header>
+
+  {% if user.role == "admin" %}
+    {% if redemptions %}
+    <div class="row g-3">
+      {% for redemption in redemptions %}
+      <div class="col-xl-6">
+        <article class="card shadow-sm border-0 h-100"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-3"><div><h2 class="h5">{{ redemption.award_name }}</h2><p class="mb-1">{{ redemption.student_name }}</p><small class="text-muted">{{ redemption.award_required_hours }}h award · {{ redemption.redemption_date.strftime('%b %d, %Y') }}</small></div><span class="text-muted small text-capitalize flex-shrink-0">{{ redemption.status }}</span></div>
+          <form class="d-flex justify-content-end gap-2 mt-3" method="post" action="{{ url_for('review_award_redemption', redemption_id=redemption.id) }}">
+            <button class="btn btn-outline-secondary btn-sm" type="submit" name="decision" value="rejected">Reject</button>
+            <button class="btn btn-primary btn-sm" type="submit" name="decision" value="approved">Approve</button>
+          </form>
+        </div></article>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="text-muted">No award requests are waiting for review.</p>{% endif %}
+  {% else %}
+    {% if awards %}
+    <div class="row g-3">
+      {% for award in awards %}
+      <div class="col-md-6 col-xl-4">
+        <article class="card shadow-sm border-0 h-100"><div class="card-body d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start gap-2"><div><h2 class="h5 mb-1">{{ award.name }}</h2><small class="text-muted">{{ award.milestone_name }}</small></div>
+            {% if award.redeemed %}<span class="badge text-bg-primary">{{ award.status }}</span>{% elif award.eligible %}<span class="badge text-bg-success">Unlocked</span>{% else %}<span class="badge text-bg-light text-dark">Locked</span>{% endif %}
+          </div>
+          <p class="text-muted small mt-3">{{ award.description }}</p>
+          <div class="d-flex justify-content-between align-items-center mt-auto"><strong>{{ award.required_hours }} hours</strong>
+            {% if award.eligible and not award.redeemed %}<a class="btn btn-primary btn-sm" href="{{ url_for('redeem_award_detail_view', award_id=award.id) }}">Redeem</a>{% endif %}
+          </div>
+        </div></article>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="text-muted">No awards are configured yet.</p>{% endif %}
+  {% endif %}
+</main>
+{% endblock %}

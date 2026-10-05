@@ -1,0 +1,45 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Milestone Details{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2" style="max-width: 760px">
+  <a class="text-decoration-none" href="{{ url_for('user_home_view') }}">&larr; Dashboard</a>
+
+  <header class="mt-4 mb-4">
+    <p class="text-uppercase text-muted small mb-1">{{ milestone.award_name }} Milestone</p>
+    <h1 class="h2 mb-0">Milestone Details</h1>
+  </header>
+
+  <section class="card shadow-sm border-0" aria-label="Milestone details">
+    <div class="card-body p-4">
+      <dl class="row mb-4">
+        <dt class="col-sm-5">Required Hours</dt>
+        <dd class="col-sm-7">{{ milestone.required_hours }} approved hours</dd>
+
+        <dt class="col-sm-5">My Hours</dt>
+        <dd class="col-sm-7">{{ milestone.progress }} approved hours</dd>
+
+        <dt class="col-sm-5">Status</dt>
+        <dd class="col-sm-7">
+          {% if milestone.unlocked %}
+          <span class="badge text-bg-success">Unlocked</span>
+          {% else %}
+          <span class="badge text-bg-light text-dark">{{ milestone.required_hours - milestone.progress }} hours remaining</span>
+          {% endif %}
+        </dd>
+
+        <dt class="col-sm-5">Description</dt>
+        <dd class="col-sm-7">{{ milestone.description }}</dd>
+      </dl>
+
+      <div class="d-flex justify-content-between small text-muted mb-1">
+        <span>Progress</span>
+        <span>{{ milestone.progress }} / {{ milestone.required_hours }} hours</span>
+      </div>
+      <div class="progress" role="progressbar" aria-label="Milestone progress" aria-valuenow="{{ milestone.progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" style="width: {{ milestone.progress_percent }}%"></div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

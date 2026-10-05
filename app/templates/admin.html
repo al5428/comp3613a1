@@ -1,9 +1,31 @@
 {% extends "authenticated-base.html" %}
-{% block title %}Admin{% endblock %}
+{% block title %}Administrator dashboard{% endblock %}
 
 {% block subpage_content %}
 <div class="container-fluid py-2">
-  <h1 class="h4 mb-2">Admin</h1>
-  <p class="text-muted mb-0">Admin workflow screens replace this shell in Phase 5 implement.</p>
+  <header class="mb-4">
+    <p class="text-uppercase text-muted small mb-1">Administrator</p>
+    <h1 class="h3 mb-0">Dashboard</h1>
+  </header>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <a class="card shadow-sm border-0 h-100 text-decoration-none text-reset" href="{{ url_for('admin_pending_volunteer_hours_view') }}">
+        <div class="card-body">
+          <div class="text-muted small">Volunteer hours awaiting review</div>
+          <div class="display-6">{{ pending_submissions }}</div>
+          <span class="btn btn-outline-primary btn-sm mt-2">Review volunteer hours</span>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6">
+      <a class="card shadow-sm border-0 h-100 text-decoration-none text-reset" href="{{ url_for('admin_awards_view') }}">
+        <div class="card-body">
+          <div class="text-muted small">Award requests awaiting review</div>
+          <div class="display-6">{{ pending_redemptions }}</div>
+          <span class="btn btn-outline-primary btn-sm mt-2">Review award requests</span>
+        </div>
+      </a>
+    </div>
+  </div>
 </div>
 {% endblock %}

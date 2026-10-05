@@ -1,0 +1,23 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Profile{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2" style="max-width: 760px">
+  <header class="mb-4">
+    <p class="text-uppercase text-muted small mb-1">{{ "Administrator" if user.role == "admin" else "Student" }}</p>
+    <h1 class="h3 mb-0">Profile</h1>
+  </header>
+  <section class="card shadow-sm border-0" aria-label="Profile information">
+    <div class="card-body p-4">
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Username</dt>
+        <dd class="col-sm-8">{{ user.username }}</dd>
+        <dt class="col-sm-4">Email</dt>
+        <dd class="col-sm-8">{{ user.email }}</dd>
+        <dt class="col-sm-4">Role</dt>
+        <dd class="col-sm-8">{{ "Administrator" if user.role == "admin" else "Student" }}</dd>
+      </dl>
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,29 @@
+{
+  "system": "Student Awards",
+  "actors": [
+    {"name": "Student", "side": "left"},
+    {"name": "Administrator", "side": "right"}
+  ],
+  "use_cases": [
+    {
+      "name": "Verify Volunteer Hours",
+      "actors": ["Student", "Administrator"]
+    },
+    {
+      "name": "View Submission Evidence",
+      "extends": ["Verify Volunteer Hours"]
+    },
+    {
+      "name": "Track Progress and Unlock Milestones",
+      "actors": ["Student"]
+    },
+    {
+      "name": "View Milestone Details",
+      "extends": ["Track Progress and Unlock Milestones"]
+    },
+    {
+      "name": "Redeem an Award",
+      "actors": ["Student"]
+    }
+  ]
+}

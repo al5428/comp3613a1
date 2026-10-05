@@ -5,7 +5,7 @@
 <div class="auth-shell">
   <div class="auth-panel">
     <a class="auth-back" href="{{ url_for('index_view') }}">← Home</a>
-    <div class="brand-wordmark">FastStarter</div>
+    <div class="brand-wordmark">Student Awards</div>
     <p class="auth-tagline">Create an account</p>
 
     <form method="POST" action="{{ url_for('register_view') }}">
@@ -29,7 +29,3 @@
       {% for message in get_flashed_messages(request) %}
       <div class="alert alert-{{ message.type }} mb-0" role="alert">{{ message.message }}</div>
       {% endfor %}
-    </form>
-  </div>
-</div>
-{% endblock %}

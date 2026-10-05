@@ -1,14 +1,13 @@
 :root {
-  /* Phase 5 theming: Guide overwrites these from docs/report.md preferences */
-  --brand-name: "FastStarter";
-  --brand-bg: #0c1218;
-  --brand-surface: #f7f4ef;
-  --brand-ink: #14202b;
-  --brand-muted: #6a7a88;
-  --brand-accent: #c45c26;
-  --brand-accent-2: #2a6f6b;
-  --brand-sidebar: #14202b;
-  --brand-sidebar-text: #a8b4bf;
+  --brand-name: "Student Awards";
+  --brand-bg: #0d1723;
+  --brand-surface: #fffaf2;
+  --brand-ink: #182a35;
+  --brand-muted: #596d76;
+  --brand-accent: #f5a623;
+  --brand-accent-2: #157a79;
+  --brand-sidebar: #132d3d;
+  --brand-sidebar-text: #dfeaf0;
   --brand-font-display: "Fraunces", Georgia, serif;
   --brand-font-body: "Source Sans 3", "Segoe UI", sans-serif;
   --brand-radius: 0.85rem;
@@ -270,4 +269,50 @@ body {
 
 .auth-back:hover {
   color: var(--brand-accent);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.metric-label {
+  font-size: 0.72rem;
+  color: var(--brand-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.metric-value {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--brand-ink);
+  margin-top: 0.3rem;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background: rgba(215, 107, 43, 0.12);
+  color: #9a4a19;
+}
+
+.status-approved {
+  background: rgba(42, 108, 109, 0.12);
+  color: #214d4e;
+}
+
+.status-rejected {
+  background: rgba(94, 109, 125, 0.12);
+  color: #495764;
+}
+
+.modal-body {
+  color: var(--brand-ink);
 }

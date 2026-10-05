@@ -1,0 +1,57 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Review Volunteer Hours{% endblock %}
+
+{% block subpage_content %}
+{% set submission = detail.submission %}
+<main class="container-fluid py-2" style="max-width: 900px">
+  <header class="mb-4">
+    <p class="text-uppercase text-muted small mb-1">Administrator review</p>
+    <h1 class="h3 mb-0">Review Volunteer Hours</h1>
+  </header>
+
+  <section class="card shadow-sm border-0" aria-label="Volunteer submission details">
+    <div class="card-body p-4">
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Student Name</dt>
+        <dd class="col-sm-8">{{ detail.student_name }}</dd>
+        <dt class="col-sm-4">Activity Name</dt>
+        <dd class="col-sm-8">{{ submission.activity_name }}</dd>
+        <dt class="col-sm-4">Date</dt>
+        <dd class="col-sm-8">{{ submission.activity_date.strftime('%b %d, %Y') }}</dd>
+        <dt class="col-sm-4">Hours Worked</dt>
+        <dd class="col-sm-8">{{ submission.hours_worked }}</dd>
+        <dt class="col-sm-4">Submission Date</dt>
+        <dd class="col-sm-8">{{ submission.submission_date.strftime('%b %d, %Y at %I:%M %p') }}</dd>
+        <dt class="col-sm-4">Activity Description</dt>
+        <dd class="col-sm-8">{{ submission.description or "No description provided." }}</dd>
+        <dt class="col-sm-4">Evidence</dt>
+        <dd class="col-sm-8">
+          {% if submission.evidence %}
+          <a href="{{ submission.evidence }}" target="_blank" rel="noreferrer">View evidence</a>
+          {% else %}
+          No evidence provided.
+          {% endif %}
+        </dd>
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8"><span class="badge rounded-pill status-badge status-{{ submission.status }}">{{ submission.status }}</span></dd>
+      </dl>
+
+      <div class="row g-3 mt-4 pt-3 border-top">
+        <div class="col-4">
+          <form method="post" action="{{ url_for('review_volunteer_submission', submission_id=submission.id) }}">
+            <button class="btn btn-primary w-100" type="submit" name="decision" value="approved">Approve</button>
+          </form>
+        </div>
+        <div class="col-4">
+          <form method="post" action="{{ url_for('review_volunteer_submission', submission_id=submission.id) }}">
+            <button class="btn btn-outline-danger w-100" type="submit" name="decision" value="rejected">Reject</button>
+          </form>
+        </div>
+        <div class="col-4">
+          <a class="btn btn-outline-secondary w-100" href="{{ url_for('admin_volunteer_hours_view') }}">Exit Review</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
