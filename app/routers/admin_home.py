@@ -104,7 +104,7 @@ async def review_volunteer_submission(
         service.review_submission(
             submission_id,
             decision,
-            reviewer_id=user.id,
+            reviewer=user,
             notes=notes,
         )
         flash(request, f"Submission marked as {decision}.", "success")
@@ -123,7 +123,7 @@ async def review_award_redemption(
 ):
     service = VolunteerService(db)
     try:
-        service.review_redemption(redemption_id, decision, reviewer_id=user.id)
+        service.review_redemption(redemption_id, decision, reviewer=user)
         flash(request, f"Award redemption marked as {decision}.", "success")
     except ValueError as exc:
         flash(request, str(exc), "danger")

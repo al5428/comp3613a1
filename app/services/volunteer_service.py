@@ -3,6 +3,7 @@ from datetime import date
 from sqlmodel import select
 
 from app.repositories.volunteer_submission import (
+    AdministratorRepository,
     AwardRepository,
     MilestoneRepository,
     RedeemedAwardRepository,
@@ -11,17 +12,24 @@ from app.repositories.volunteer_submission import (
     VolunteerSubmissionRepository,
 )
 from app.models.student_awards import Student, StudentMilestone
+from app.models.user import User
 
 
 class VolunteerService:
     def __init__(self, db):
         self.db = db
+        self.administrator_repo = AdministratorRepository(db)
         self.repo = VolunteerSubmissionRepository(db)
         self.student_repo = StudentRepository(db)
         self.milestone_repo = MilestoneRepository(db)
         self.award_repo = AwardRepository(db)
         self.student_milestone_repo = StudentMilestoneRepository(db)
         self.redemption_repo = RedeemedAwardRepository(db)
+
+    def _resolve_administrator_id(self, reviewer: User | None) -> int | None:
+        if reviewer is None:
+            return None
+        return self.administrator_repo.get_or_create_for_user(reviewer).id
 
     def get_or_create_student_for_user(self, user):
         return self.student_repo.get_or_create_for_user(user)
@@ -85,14 +93,14 @@ class VolunteerService:
             activity_date=activity_date,
         )
 
-    def review_submission(self, submission_id: int, decision: str, *, reviewer_id: int | None = None, notes: str = ""):
+    def review_submission(self, submission_id: int, decision: str, *, reviewer: User | None = None, notes: str = ""):
         normalized = (decision or "").strip().lower()
         if normalized not in {"approved", "rejected"}:
             raise ValueError("Decision must be approved or rejected.")
         updated = self.repo.update_status(
             submission_id,
             status=normalized,
-            administrator_id=reviewer_id,
+            administrator_id=self._resolve_administrator_id(reviewer),
             review_notes=notes,
         )
         self.sync_student_hours(updated.student_id)
@@ -195,11 +203,15 @@ class VolunteerService:
             })
         return payload
 
-    def review_redemption(self, redemption_id: int, decision: str, *, reviewer_id: int | None = None):
+    def review_redemption(self, redemption_id: int, decision: str, *, reviewer: User | None = None):
         normalized = (decision or "").strip().lower()
         if normalized not in {"approved", "rejected"}:
             raise ValueError("Decision must be approved or rejected.")
-        return self.redemption_repo.update_status(redemption_id, status=normalized, administrator_id=reviewer_id)
+        return self.redemption_repo.update_status(
+            redemption_id,
+            status=normalized,
+            administrator_id=self._resolve_administrator_id(reviewer),
+        )
 
     def list_for_student(self, student_id: int):
         return self.repo.list_for_student(student_id)

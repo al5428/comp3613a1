@@ -22,11 +22,35 @@ from app.services.volunteer_service import VolunteerService
 from app.utilities.security import verify_password
 
 
+def add_reviewer(session, *, user_id: int, administrator_id: int):
+    user = User(
+        id=user_id,
+        username=f"admin{user_id}",
+        email=f"admin{user_id}@example.com",
+        password="hash",
+        role="admin",
+    )
+    administrator = Administrator(
+        id=administrator_id,
+        user_id=user_id,
+        name=user.username,
+        email=user.email,
+    )
+    session.add_all([user, administrator])
+    session.commit()
+    return user, administrator
+
+
 def test_submit_and_review_flow():
     engine = create_engine("sqlite:///:memory:")
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:
+        reviewer, administrator = add_reviewer(
+            session,
+            user_id=12,
+            administrator_id=3,
+        )
         service = VolunteerService(session)
 
         submission = service.create_submission(
@@ -40,9 +64,9 @@ def test_submit_and_review_flow():
         assert submission.hours_worked == 4
         assert submission.activity_date is not None
 
-        updated = service.review_submission(submission.id, "approved", reviewer_id=2)
+        updated = service.review_submission(submission.id, "approved", reviewer=reviewer)
         assert updated.status == "approved"
-        assert updated.reviewer_id == 2
+        assert updated.administrator_id == administrator.id
 
 
 def test_student_service_resolves_user_to_different_student_id():
@@ -90,6 +114,11 @@ def test_milestone_unlock_and_award_redemption():
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:
+        reviewer, administrator = add_reviewer(
+            session,
+            user_id=31,
+            administrator_id=7,
+        )
         service = VolunteerService(session)
 
         milestone = Milestone(name="Community Builder", required_hours=10, description="10 hours")
@@ -108,7 +137,12 @@ def test_milestone_unlock_and_award_redemption():
             hours_worked=10,
             evidence="https://example.com/tutoring",
         )
-        service.review_submission(submission.id, "approved", reviewer_id=2)
+        updated_submission = service.review_submission(
+            submission.id,
+            "approved",
+            reviewer=reviewer,
+        )
+        assert updated_submission.administrator_id == administrator.id
 
         student = service.get_or_create_student(student_id=1)
         service.sync_student_hours(student.id)
@@ -123,7 +157,12 @@ def test_milestone_unlock_and_award_redemption():
         assert redemption.status == "pending"
         assert redemption.student_id == student.id
 
-        service.review_redemption(redemption.id, "rejected", reviewer_id=2)
+        updated_redemption = service.review_redemption(
+            redemption.id,
+            "rejected",
+            reviewer=reviewer,
+        )
+        assert updated_redemption.administrator_id == administrator.id
         award_state = next(item for item in service.list_awards_for_student(student.id) if item["id"] == award.id)
         assert award_state["redeemed"]
         assert award_state["status"] == "rejected"
