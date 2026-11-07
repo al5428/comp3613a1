@@ -29,3 +29,7 @@
       {% for message in get_flashed_messages(request) %}
       <div class="alert alert-{{ message.type }} mb-0" role="alert">{{ message.message }}</div>
       {% endfor %}
+    </form>
+  </div>
+</div>
+{% endblock %}
