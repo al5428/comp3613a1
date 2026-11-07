@@ -1,0 +1,339 @@
+{
+  "info": {
+    "_postman_id": "45621da5-6e7e-499e-a1ce-35123f4ec24b",
+    "name": "COMP3613 Assignment 2 - Student Awards API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "59094289",
+    "_collection_link": "https://go.postman.co/collection/59094289-45621da5-6e7e-499e-a1ce-35123f4ec24b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API01 - Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Health check returns status 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Health check returns ok true\", function () {\r\n    const response = pm.response.json();\r\n    pm.expect(response.ok).to.eql(true);\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/health",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API02 - Login Page",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Login page returns status 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Login page returns HTML\", function () {\r\n    pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n      .to.include(\"text/html\");\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/login",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API03 - Unauthorized Dashboard Access.",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\npm.test(\"Unauthenticated user is denied dashboard access\", function () {\n    if (pm.response.code === 200) {\n        pm.expect(pm.response.text()).to.include(\"Session Expired\");\n    } else {\n        pm.expect([401, 303, 307]).to.include(pm.response.code);\n    }\n});\n\npm.test(\"Unauthorized response is HTML or redirects\", function () {\n    if ([303, 307].includes(pm.response.code)) {\n        pm.expect(pm.response.headers.get(\"Location\")).to.exist;\n    } else {\n        pm.expect(pm.response.headers.get(\"Content-Type\"))\n            .to.include(\"text/html\");\n    }\n});\n\npm.test(\"Response does not expose the dashboard\", function () {\n    if (pm.response.code === 200) {\n        pm.expect(pm.response.text()).to.include(\"Session Expired\");\n    } else {\n        pm.expect([401, 303, 307]).to.include(pm.response.code);\n    }\n});\n"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "followRedirects": false
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/app",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "app"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API04 - Unauthorized Awards Access",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\npm.test(\"Unauthenticated user cannot view awards\", function () {\n    if (pm.response.code === 200) {\n        pm.expect(pm.response.text().toLowerCase())\n            .to.include(\"session expired\");\n    } else {\n        pm.expect([401, 303, 307])\n            .to.include(pm.response.code);\n    }\n});\n\npm.test(\"Response is HTML or redirects\", function () {\n    if ([303, 307].includes(pm.response.code)) {\n        pm.expect(pm.response.headers.get(\"Location\")).to.exist;\n    } else {\n        pm.expect(pm.response.headers.get(\"Content-Type\"))\n            .to.include(\"text/html\");\n    }\n});\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/app/awards",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "app",
+            "awards"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API05 - Unauthorized Admin Access",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Unauthenticated user cannot access admin dashboard\", function () {\r\n    if (pm.response.code === 200) {\r\n        pm.expect(pm.response.text()).to.include(\"Session Expired\");\r\n    } else {\r\n        pm.expect([401, 303, 307]).to.include(pm.response.code);\r\n    }\r\n});\r\n\r\npm.test(\"Admin access denial returns HTML or redirect\", function () {\r\n    if ([303, 307].includes(pm.response.code)) {\r\n        pm.expect(pm.response.headers.get(\"Location\")).to.exist;\r\n    } else {\r\n        pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n            .to.include(\"text/html\");\r\n    }\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/admin",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "admin"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API06 — Homepage",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Homepage returns status 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Homepage returns HTML\", function () {\r\n    pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n        .to.include(\"text/html\");\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API07 — Registration Page",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Registration page returns status 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Registration page returns HTML\", function () {\r\n    pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n        .to.include(\"text/html\");\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/register",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API08 - Unauthorized Volunteer Hours Access",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Unauthenticated user cannot view volunteer hours\", function () {\r\n    if (pm.response.code === 200) {\r\n        pm.expect(pm.response.text()).to.include(\"Session Expired\");\r\n    } else {\r\n        pm.expect([401, 303, 307]).to.include(pm.response.code);\r\n    }\r\n});\r\n\r\npm.test(\"Denial response is HTML or redirects\", function () {\r\n    if ([303, 307].includes(pm.response.code)) {\r\n        pm.expect(pm.response.headers.get(\"Location\")).to.exist;\r\n    } else {\r\n        pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n            .to.include(\"text/html\");\r\n    }\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "followRedirects": false
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/app/volunteer-hours",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "app",
+            "volunteer-hours"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API09 - Unauthorized Admin Review Access",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Unauthenticated user cannot access admin reviews\", function () {\r\n    if (pm.response.code === 200) {\r\n        pm.expect(pm.response.text()).to.include(\"Session Expired\");\r\n    } else {\r\n        pm.expect([401, 303, 307]).to.include(pm.response.code);\r\n    }\r\n});\r\n\r\npm.test(\"Denial response is HTML or redirects\", function () {\r\n    if ([303, 307].includes(pm.response.code)) {\r\n        pm.expect(pm.response.headers.get(\"Location\")).to.exist;\r\n    } else {\r\n        pm.expect(pm.response.headers.get(\"Content-Type\"))\r\n            .to.include(\"text/html\");\r\n    }\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "followRedirects": false
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/admin/volunteer-hours/review",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "admin",
+            "volunteer-hours",
+            "review"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API10 - Invalid Milestone ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "\r\npm.test(\"Invalid milestone request is rejected\", function () {\r\n    if (pm.response.code === 200) {\r\n        pm.expect(pm.response.text()).to.include(\"Session Expired\");\r\n    } else {\r\n        pm.expect([401, 303, 307, 422])\r\n            .to.include(pm.response.code);\r\n    }\r\n});\r\n\r\npm.test(\"Response has an appropriate content type or redirect\", function () {\r\n    if ([303, 307].includes(pm.response.code)) {\r\n        pm.expect(pm.response.headers.get(\"Location\")).to.exist;\r\n    } else {\r\n        const contentType = pm.response.headers.get(\"Content-Type\") || \"\";\r\n\r\n        pm.expect(\r\n            contentType.includes(\"text/html\") ||\r\n            contentType.includes(\"application/json\")\r\n        ).to.be.true;\r\n    }\r\n});\r\n"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "followRedirects": false
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://faststarter-r5s6.onrender.com/app/milestones/abc",
+          "protocol": "https",
+          "host": [
+            "faststarter-r5s6",
+            "onrender",
+            "com"
+          ],
+          "path": [
+            "app",
+            "milestones",
+            "abc"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
