@@ -88,18 +88,18 @@ Each test targets one method. Repository and database dependencies will be repla
 
 #### 3. Unit Test Cases
 
-The table follows Tutorial 4's **Unit Test / Module Tested / Expected Output** format.
+The table below documents the eight existing tests in `tests/test_volunteer_service_unit.py`, including their test inputs and asserted behavior.
 
-| Unit Test | Module Tested | Expected Output |
+| Unit Test | Input | Expected Output |
 |---|---|---|
-| **UT01** `test_empty_activity_name` | `create_submission()` with an empty activity name | Raises `ValueError` |
-| **UT02** `test_zero_volunteer_hours` | `create_submission()` with `hours_worked=0` | Raises `ValueError` |
-| **UT03** `test_approved_hours` | `get_total_approved_hours()` with mocked approved submissions of 5 and 10 hours | Returns `15` |
-| **UT04** `test_invalid_review_decision` | `review_submission()` with `decision="pending"` | Raises `ValueError` |
-| **UT05** `test_ineligible_redemption` | `redeem_award()` with 20 approved hours and a 25-hour award | Raises `ValueError` |
-| **UT06** `test_duplicate_redemption` | `redeem_award()` when a previous request exists | Raises `ValueError` |
-| **UT07** `test_award_eligibility` | `list_awards_for_student()` with 25 hours and a 50-hour award | `eligible=False` and `hours_remaining=25` |
-| **UT08** `test_invalid_redemption_review` | `review_redemption()` with `decision="cancelled"` | Raises `ValueError` |
+| `test_empty_activity_name` | Call `create_submission(student_id=1, activity_name="   ", hours_worked=1, evidence="")`. | Raises `ValueError` with message `"Activity name is required."`; `repo.create` is not called. |
+| `test_zero_volunteer_hours` | Call `create_submission(student_id=1, activity_name="Campus garden", hours_worked=0, evidence="")`. | Raises `ValueError` with message `"Hours worked must be greater than zero."`; `repo.create` is not called. |
+| `test_approved_hours` | For student `1`, mock two approved submissions with `hours_worked=5` and `hours_worked=10`; call `get_total_approved_hours(student_id=1)`. | Returns `15`; `repo.list_approved_for_student` is called once with `1`. |
+| `test_invalid_review_decision` | Call `review_submission(submission_id=1, decision="pending")`. | Raises `ValueError` with message `"Decision must be approved or rejected."`; `repo.update_status` and `administrator_repo.get_or_create_for_user` are not called. |
+| `test_ineligible_redemption` | For student `1`, mock synchronized hours as `20` and award `2` as requiring `25` hours; call `redeem_award(student_id=1, award_id=2)`. | Raises `ValueError` with message `"Student does not yet meet the hour requirement for this award."`; the redemption lookup and `redemption_repo.create` are not called. |
+| `test_duplicate_redemption` | For student `1`, mock synchronized hours as `25`, award `2` as requiring `25` hours, and an existing redemption; call `redeem_award(student_id=1, award_id=2)`. | Raises `ValueError` with message `"This award has already been requested and cannot be redeemed again."`; `get_by_student_and_award` is called once with `(1, 2)` and `redemption_repo.create` is not called. |
+| `test_award_eligibility` | For student `1`, mock `25` approved hours and no existing redemption. Return award `2` named `"Medal"`, description `"A 50-hour award"`, requiring `50` hours and linked to milestone `3`, named `"Community Builder"`. | Returns `[{"id": 2, "name": "Medal", "description": "A 50-hour award", "required_hours": 50, "milestone_name": "Community Builder", "eligible": false, "redeemed": false, "status": "not_requested", "hours_remaining": 25}]`; hour synchronization and approved-hour lookup are each called once with `1`, and the redemption lookup is called once with `(1, 2)`. |
+| `test_invalid_redemption_review` | Call `review_redemption(redemption_id=1, decision="cancelled")`. | Raises `ValueError` with message `"Decision must be approved or rejected."`; `redemption_repo.update_status` and `administrator_repo.get_or_create_for_user` are not called. |
 
 #### 4. Entry Criteria
 
@@ -119,17 +119,17 @@ The existing tests create an isolated in-memory SQLite database. They exercise r
 
 #### 3. Integration Test Cases
 
-The table follows Tutorial 4's **Test / Dependencies / Description** format.
+The tests call service and CLI helper functions directly; they do not exercise HTTP routes.
 
 | Test | Dependencies | Description |
 |---|---|---|
-| **IT01** `test_submit_and_review_flow` | Submission service, review service, repositories, database | A submission starts as pending and is approved by the correct administrator. |
-| **IT02** `test_student_service_resolves_user_to_different_student_id` | Student lookup, submission service, database | A submission uses the correct student ID even when it differs from the user ID. |
-| **IT03** `test_milestone_unlock_and_award_redemption` | Submission review, hour synchronization, milestones, redemptions | Approved hours unlock a milestone; redemption can be reviewed; a duplicate request is blocked. |
-| **IT04** `test_demo_seed_data_is_consistent_and_rerunnable` | Seed function, models, repositories, database | Demo records remain consistent when seeding is repeated. |
-| **IT05** `test_legacy_bob_account_is_migrated_without_losing_student_history` | Seed function, user and student models, database | Legacy student identity and records are preserved during migration. |
-| **IT06** `test_seed_adds_description_column_to_legacy_submission_table` | Schema update helper, database | A missing `description` column is added to a legacy table. |
-| **IT07** `test_seed_adds_and_backfills_activity_date_column` | Schema update helper, database | A missing `activity_date` column is added and existing dates are backfilled. |
+| `test_submit_and_review_flow` | In-memory SQLite `create_engine`, `SQLModel.metadata.create_all`, `Session`; `add_reviewer`; `VolunteerService.create_submission()` and `review_submission()`; `VolunteerSubmissionRepository.create()` and `update_status()`; `AdministratorRepository.get_or_create_for_user()`; Student Awards and User models. | A submission for 4 volunteer hours is created with `pending` status and a non-null activity date. Approving it with the reviewer records `approved` status and that reviewer's administrator ID. |
+| `test_student_service_resolves_user_to_different_student_id` | In-memory SQLite `create_engine`, `SQLModel.metadata.create_all`, `Session`; `VolunteerService.get_or_create_student_for_user()`, `create_submission_for_user()`, and `get_student_summary()`; `StudentRepository.get_or_create_for_user()` and `get_by_user_id()`; `VolunteerSubmissionRepository.create()`, `list_for_student()`, and `list_approved_for_student()`; User, Student, and VolunteerSubmission models. | A user with ID `13` is associated with a pre-existing Student record with ID `11`. The service resolves that student, saves the new submission with `student_id=11`, and reports a submission count of `1` for the student. |
+| `test_milestone_unlock_and_award_redemption` | In-memory SQLite `create_engine`, `SQLModel.metadata.create_all`, `Session`; `add_reviewer`; `VolunteerService.create_submission()`, `review_submission()`, `get_or_create_student()`, `sync_student_hours()`, `list_milestones_for_student()`, `redeem_award()`, `review_redemption()`, and `list_awards_for_student()`; `VolunteerSubmissionRepository`, `AdministratorRepository`, `StudentRepository`, `MilestoneRepository`, `AwardRepository`, `StudentMilestoneRepository`, and `RedeemedAwardRepository`; Student Awards and User models. | Approving a 10-hour submission unlocks the 10-hour milestone and associates the campus-merch award with it. The eligible student can request that award; its redemption starts `pending` and can be marked `rejected` by the reviewer. The award is then shown as redeemed with rejected status, and a second request raises `ValueError`. |
+| `test_demo_seed_data_is_consistent_and_rerunnable` | In-memory SQLite `create_engine`, `SQLModel.metadata.create_all`, `Session`, `session.exec(select(...))`; `app.cli._seed_demo_data()`; `UserRepository.get_by_username()` and `create()`; `StudentRepository.get_or_create_for_user()`; `AdministratorRepository.get_or_create_for_user()`; `VolunteerService.get_student_summary()`, `list_for_review()`, `list_submissions_for_admin()`, `get_submission_detail_for_admin()`, and `list_pending_redemptions()`; `verify_password()`; Student Awards and User models. | The first seed call reports `13` created and `0` skipped. The seeded users, students, administrators, submissions, milestones, awards, student milestones, and redemptions meet the asserted counts and consistency rules. After usernames and passwords are changed to legacy values and seeding runs again, there are still `30` submissions and `6` redemptions, and the student credentials and usernames are restored as asserted. |
+| `test_legacy_bob_account_is_migrated_without_losing_student_history` | In-memory SQLite `create_engine`, `SQLModel.metadata.create_all`, `Session`, `session.exec(select(...))`; `app.cli._seed_demo_data()`; `UserRepository.get_by_username()`; `StudentRepository.get_or_create_for_user()`; `encrypt_password()` and `verify_password()`; User and Student models. | Seeding a legacy `bob` user with a Bruce Wayne student record preserves the original user and student IDs while renaming that account to Bruce Wayne. A separate `bob` user and Bob student are created, with the expected student names and passwords for both accounts. |
+| `test_seed_adds_description_column_to_legacy_submission_table` | In-memory SQLite `create_engine`; `engine.begin()`; SQLAlchemy `text()` and `inspect()`; `app.cli._ensure_submission_description_column()`. | Given a legacy `volunteersubmission` table containing only `id`, the helper adds a column named `description`. |
+| `test_seed_adds_and_backfills_activity_date_column` | In-memory SQLite `create_engine`; `engine.begin()` and `engine.connect()`; SQLAlchemy `text()` and `inspect()`; `app.cli._ensure_submission_activity_date_column()`. | Given a legacy submission with `submission_date='2026-09-15 12:30:00'` and no `activity_date` column, the helper adds the column and backfills the row's activity date to `2026-09-15`. |
 
 #### 4. Entry Criteria
 
@@ -145,28 +145,33 @@ Confirm that students and administrators can complete the main tasks shown in th
 
 #### 2. Test Environment
 
+| Tester Information | Details |
+|---|---|
+| Tester Name | Edan Ali |
+| Tester Position/Role | Student Developer |
+| Date of Test (DD/MM/YYYY) | 07/11/2026 |
+
 | Item | Details |
 |---|---|
 | Application | Student Awards web application |
 | Platform | Web browser |
 | Environment | Deployed application |
-| Test participants | Student-role and administrator-role testers |
-| Test data | Demo accounts, submissions, milestones, and awards |
+| Test data | Demo accounts, volunteer submissions, milestones, and awards; individual account credentials are not recorded here. |
 
 #### 3. Acceptance Test Cases
 
-This table follows Tutorial 4's **Test Case / Pre-conditions / Test Steps / Test Criteria / Success** format.
+The table records the eight existing Student Awards UAT scenarios in execution order. Each case links to its corresponding screenshot in `docs/assignment2/screenshots/`.
 
-| Test Case | Pre-conditions | Test Steps | Test Criteria | Success |
+| Test Case | Pre-conditions | Test Steps | Test Criteria | Success (Pass/Fail) |
 |---|---|---|---|:---:|
-| **UAT01** Submit volunteer hours | Student is logged in. | Open Volunteer Hours; enter activity details; submit. | Submission appears as **Pending**. | ☑ |
-| **UAT02** Approve submission | Administrator is logged in; a pending submission exists. | Open submission; review details; select Approve. | Status changes to **Approved**. | ☑ |
-| **UAT03** Reject submission | Administrator is logged in; another pending submission exists. | Open submission; select Reject. | Status changes to **Rejected**. | ☑ |
-| **UAT04** View progress | Student is logged in; submissions exist. | Open Dashboard; inspect volunteer-hour total. | Only approved hours count toward progress. | ☑ |
-| **UAT05** Unlock milestone | Student has at least 25 approved hours. | Open Dashboard; inspect milestones. | **Plaque** is unlocked. | ☑ |
-| **UAT06** Redeem award | Student is eligible and has not requested the award. | Open Awards; select award; request redemption. | Redemption is shown as **Pending**. | ☑ |
-| **UAT07** Block duplicate redemption | Student has already requested the award. | Open Awards; inspect the previously requested award. | No second redemption option is available through the student interface. | ☑ |
-| **UAT08** Review redemption | Administrator is logged in; a pending redemption exists. | Open request; approve or reject it. | Redemption displays the selected status. | ☑ |
+| **UAT01 — Submit volunteer hours** | Student is signed in to the deployed Student Awards application and can access Volunteer Hours. | 1. Open **Volunteer Hours**.<br>2. Enter the recorded activity **Community Cleanup** and **6** hours, with the activity details required by the form.<br>3. Submit the activity for review. | The submission history shows **Community Cleanup**, **6h**, and **Pending**.<br>Evidence: [UAT01 screenshot](screenshots/uat01-submit-hours.png) | **Pass** — recorded |
+| **UAT02 — Admin approves volunteer hours** | Administrator is signed in, and a pending **Community Cleanup** submission for **6** hours is available for review. | 1. Open the administrator's **Volunteer Hours** list.<br>2. Locate the **Community Cleanup** entry showing **6** hours.<br>3. Approve the submission. | The page confirms the submission was marked approved, and the administrator's list shows **Community Cleanup**, **6** hours, and **Approved**.<br>Evidence: [UAT02 screenshot](screenshots/uat02-approve-submission.png). The screenshot matches UAT01 by activity name and hours but does not show a submission ID to confirm it is the same record. | **Pass** — recorded |
+| **UAT03 — Admin rejects volunteer hours** | Administrator is signed in, and the **Beach Cleanup** submission for **3** hours is pending review. | 1. Open the administrator's **Volunteer Hours** list.<br>2. Locate **Beach Cleanup**, showing **3** hours.<br>3. Reject the submission. | The page confirms the submission was marked rejected, and the list shows **Beach Cleanup**, **3** hours, and **Rejected**.<br>Evidence: [UAT03 screenshot](screenshots/uat03-reject-submission.png) | **Pass** — recorded |
+| **UAT04 — View approved volunteer hours total** | Student Bob is signed in with the recorded progress snapshot: **3** submissions, including approved hours and a rejected **3-hour** Beach Cleanup submission. | 1. Open the student **Dashboard**.<br>2. Read the **Approved**, **Pending**, and **Submissions** summary values.<br>3. Compare the approved total with the rejected Beach Cleanup entry. | The dashboard shows **11h Approved**, **0 Pending**, and **3 Submissions**; the rejected **3** hours are not included in the approved total. This is the earlier progress snapshot, before the additional approved hours shown in UAT05.<br>Evidence: [UAT04 screenshot](screenshots/uat04-view-progress.png) | **Pass** — recorded |
+| **UAT05 — Unlock milestone plaque at 25 approved hours** | Student Bob is signed in after additional approved hours have brought the recorded total to **25**. | 1. Open the student **Dashboard**.<br>2. Read the approved-hour total and the **Plaque Milestone** card. | The dashboard shows **25h Approved**; the Plaque Milestone shows **Unlocked**, **25 / 25 approved hours**, and **100%** progress.<br>Evidence: [UAT05 screenshot](screenshots/uat05-unlock-plaque.png) | **Pass** — recorded |
+| **UAT06 — Submit milestone redemption request** | Student is signed in, has at least **25 approved hours**, and has not already requested the Plaque award. | 1. Open **Awards**.<br>2. Locate **Plaque**, which requires **25** approved hours.<br>3. Request the Plaque award redemption. | The Awards page confirms the request and displays the Plaque award with **pending** status.<br>Evidence: [UAT06 screenshot](screenshots/uat06-redeem-award.png) | **Pass** — recorded |
+| **UAT07 — Prevent duplicate redemption** | Student is signed in and already has a pending redemption request for the Plaque award. | 1. Open **Awards** after submitting the existing request.<br>2. Inspect the Plaque award and available actions. | The Plaque award remains **pending**, and no second redemption action is available through the student interface.<br>Evidence: [UAT07 screenshot](screenshots/uat07-block-duplicate.png) | **Pass** — recorded |
+| **UAT08 — Admin approves redemption request** | Administrator is signed in, and Bob's Plaque award redemption request is available for review. | 1. Open the administrator's award redemption review page.<br>2. Locate Bob's Plaque request.<br>3. Approve the redemption. | The Awards page displays the Plaque award with **approved** status after review.<br>Evidence: [UAT08 screenshot](screenshots/uat08-review-redemption.png) | **Pass** — recorded |
 
 #### 4. Acceptance Criteria
 
